@@ -6,50 +6,50 @@ import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
 
 type Person = {
-  id: string;
-  name: string;
-  address: string;
+  id: string
+  name: string
+  address: string
 };
 
 export default function Cadastro() {
-  const [persons, setPersons] = useState<Person[]>([]);
-  const [inputName, setInputName] = useState('');
-  const [inputAddress, setInputAddress] = useState('');
-  const [editPersonId, setEditPersonId] = useState<string | null>(null);
-  const [editPersonName, setEditPersonName] = useState('');
-  const [editPersonAddress, setEditPersonAddress] = useState('');
-  const [status, setStatus] = useState(false);
+  const [persons, setPersons] = useState<Person[]>([])
+  const [inputName, setInputName] = useState('')
+  const [inputAddress, setInputAddress] = useState('')
+  const [editPersonId, setEditPersonId] = useState<string | null>(null)
+  const [editPersonName, setEditPersonName] = useState('')
+  const [editPersonAddress, setEditPersonAddress] = useState('')
+  const [status, setStatus] = useState(false)
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'persons'), (snapshot) => {
-      const fetchedPersons: Person[] = [];
+      const fetchedPersons: Person[] = []
       snapshot.forEach((doc) => {
-        const personData = doc.data();
+        const personData = doc.data()
         const person: Person = {
           id: doc.id,
           name: personData.name,
           address: personData.address,
         };
-        fetchedPersons.push(person);
+        fetchedPersons.push(person)
       });
-      setPersons(fetchedPersons);
+      setPersons(fetchedPersons)
     });
 
     return () => {
-      unsubscribe();
-    };
-  }, []);
+      unsubscribe()
+    }
+  }, [])
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputName(event.target.value);
-  };
+    setInputName(event.target.value)
+  }
 
   const handleAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputAddress(event.target.value);
-  };
+    setInputAddress(event.target.value)
+  }
 
   const addPerson = async (event: FormEvent) => {
-    event.preventDefault();
+    event.preventDefault()
 
     if (inputName.trim() !== '' && inputAddress.trim() !== '') {
       const newPerson: Person = {
@@ -59,64 +59,64 @@ export default function Cadastro() {
       };
 
       try {
-        const docRef = await addDoc(collection(db, 'persons'), newPerson);
-        newPerson.id = docRef.id;
+        const docRef = await addDoc(collection(db, 'persons'), newPerson)
+        newPerson.id = docRef.id
         setPersons([...persons, newPerson]);
-        setInputName('');
-        setInputAddress('');
+        setInputName('')
+        setInputAddress('')
       } catch (error) {
-        console.error('Error adding person to Firestore: ', error);
+        console.error('Error adding person to Firestore: ', error)
       }
     }
   };
 
   const deletePerson = async (personId: string) => {
     try {
-      await deleteDoc(doc(db, 'persons', personId));
-      const updatedPersons = persons.filter((person) => person.id !== personId);
-      setPersons(updatedPersons);
+      await deleteDoc(doc(db, 'persons', personId))
+      const updatedPersons = persons.filter((person) => person.id !== personId)
+      setPersons(updatedPersons)
     } catch (error) {
-      console.error('Error deleting person from Firestore: ', error);
+      console.error('Error deleting person from Firestore: ', error)
     }
   };
 
   const editPerson = (personId: string, personName: string, personAddress: string) => {
-    setStatus(true);
-    setEditPersonId(personId);
-    setEditPersonName(personName);
-    setEditPersonAddress(personAddress);
+    setStatus(true)
+    setEditPersonId(personId)
+    setEditPersonName(personName)
+    setEditPersonAddress(personAddress)
   };
 
   const cancelEdit = () => {
-    setStatus(false);
-    setEditPersonId(null);
+    setStatus(false)
+    setEditPersonId(null)
   };
 
   const updatePerson = async () => {
     if (editPersonId && editPersonName.trim() !== '' && editPersonAddress.trim() !== '') {
       try {
-        const personRef = doc(db, 'persons', editPersonId);
+        const personRef = doc(db, 'persons', editPersonId)
         await updateDoc(personRef, {
           name: editPersonName.trim(),
           address: editPersonAddress.trim(),
-        });
+        })
         const updatedPersons = persons.map((person) => {
           if (person.id === editPersonId) {
-            person.name = editPersonName.trim();
-            person.address = editPersonAddress.trim();
+            person.name = editPersonName.trim()
+            person.address = editPersonAddress.trim()
           }
-          return person;
-        });
+          return person
+        })
         setStatus(false);
-        setPersons(updatedPersons);
-        setEditPersonId(null);
-        setEditPersonName('');
-        setEditPersonAddress('');
+        setPersons(updatedPersons)
+        setEditPersonId(null)
+        setEditPersonName('')
+        setEditPersonAddress('')
       } catch (error) {
-        console.error('Error updating person in Firestore: ', error);
+        console.error('Error updating person in Firestore: ', error)
       }
     }
-  };
+  }
 
   return (
     <div className={styles.container}>
