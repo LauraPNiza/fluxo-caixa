@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
+import {addDoc, collection} from 'firebase/firestore'
 import styles from './styles.module.css';
+import {db} from '../../services/firebaseConnection'
+import { GetServerSideProps } from 'next';
+import { getSession } from 'next-auth/react';
 
 type Person = {
   id: number
@@ -16,16 +20,16 @@ export default function Cadastro(){
   const [editPersonAddress, setEditPersonAddress] = useState('')
   const [status, setStatus] = useState(false)
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputName(e.target.value)
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) =>{
+    setInputName(event.target.value)
   };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputAddress(e.target.value)
+  const handleAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setInputAddress(event.target.value)
   };
 
-  const addPerson = (e: React.FormEvent) => {
-    e.preventDefault()
+  const addPerson = (event: FormEvent) => {
+    event.preventDefault()
 
     if (inputName.trim() !== '' && inputAddress.trim() !== '') {
       const newPerson: Person = {
@@ -170,5 +174,26 @@ export default function Cadastro(){
             </section>
         </main>
     </div>
-  );
-};
+  )
+}
+
+export const getServerSideProps: GetServerSideProps =async ({req}) => {
+  const session = await getSession({req})
+
+  if(!session?.user){
+        return{
+            redirect:{
+                destination: "/",
+                permanent: false,
+            },
+        }
+    }
+
+    return{
+        props: {
+            user: {
+                email: session?.user?.email,
+            }
+        },
+    }
+}
