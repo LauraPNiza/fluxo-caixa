@@ -11,7 +11,7 @@ type Person = {
   address: string
 };
 
-export default function Cadastro(){
+export default function Cadastro() {
   const [persons, setPersons] = useState<Person[]>([])
   const [inputName, setInputName] = useState('')
   const [inputAddress, setInputAddress] = useState('')
@@ -28,20 +28,27 @@ export default function Cadastro(){
     setInputAddress(event.target.value)
   };
 
-  const addPerson = (event: FormEvent) => {
-    event.preventDefault()
+  const addPerson = async (event: FormEvent) => {
+    event.preventDefault();
 
     if (inputName.trim() !== '' && inputAddress.trim() !== '') {
       const newPerson: Person = {
         id: new Date().getTime(),
         name: inputName.trim(),
         address: inputAddress.trim()
+      };
+
+      try {
+        const docRef = await addDoc(collection(db, 'persons'), newPerson)
+        newPerson.id = docRef.id
+        setPersons([...persons, newPerson])
+        setInputName('')
+        setInputAddress('')
+      } catch (error) {
+        console.error(error)
       }
-      setPersons([...persons, newPerson])
-      setInputName('')
-      setInputAddress('')
     }
-  };
+  }
 
   const deletePerson = (personId: number) => {
     const updatedPersons = persons.filter(person => person.id !== personId)
