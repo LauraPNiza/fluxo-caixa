@@ -2,64 +2,74 @@ import React, { useState } from 'react';
 import styles from './styles.module.css';
 
 type Person = {
-  id: number;
-  name: string;
-  address: string;
+  id: number
+  name: string
+  address: string
 };
 
 export default function Cadastro(){
-  const [persons, setPersons] = useState<Person[]>([]);
-  const [inputName, setInputName] = useState('');
-  const [inputAddress, setInputAddress] = useState('');
-  const [editPersonId, setEditPersonId] = useState<number | null>(null);
-  const [editPersonName, setEditPersonName] = useState('');
-  const [editPersonAddress, setEditPersonAddress] = useState('');
+  const [persons, setPersons] = useState<Person[]>([])
+  const [inputName, setInputName] = useState('')
+  const [inputAddress, setInputAddress] = useState('')
+  const [editPersonId, setEditPersonId] = useState<number | null>(null)
+  const [editPersonName, setEditPersonName] = useState('')
+  const [editPersonAddress, setEditPersonAddress] = useState('')
+  const [status, setStatus] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputName(e.target.value);
+    setInputName(e.target.value)
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputAddress(e.target.value);
+    setInputAddress(e.target.value)
   };
 
-  const addPerson = () => {
+  const addPerson = (e: React.FormEvent) => {
+    e.preventDefault()
+
     if (inputName.trim() !== '' && inputAddress.trim() !== '') {
       const newPerson: Person = {
         id: new Date().getTime(),
         name: inputName.trim(),
         address: inputAddress.trim()
-      };
-      setPersons([...persons, newPerson]);
-      setInputName('');
-      setInputAddress('');
+      }
+      setPersons([...persons, newPerson])
+      setInputName('')
+      setInputAddress('')
     }
   };
 
   const deletePerson = (personId: number) => {
-    const updatedPersons = persons.filter(person => person.id !== personId);
-    setPersons(updatedPersons);
+    const updatedPersons = persons.filter(person => person.id !== personId)
+    setPersons(updatedPersons)
   };
 
   const editPerson = (personId: number, personName: string, personAddress: string) => {
-    setEditPersonId(personId);
-    setEditPersonName(personName);
-    setEditPersonAddress(personAddress);
+    setStatus(true)
+    setEditPersonId(personId)
+    setEditPersonName(personName)
+    setEditPersonAddress(personAddress)
   };
+
+  const cancelEdit =()=>{
+    setStatus(false)
+    setEditPersonId(null)
+  }
 
   const updatePerson = () => {
     if (editPersonId && editPersonName.trim() !== '' && editPersonAddress.trim() !== '') {
       const updatedPersons = persons.map(person => {
         if (person.id === editPersonId) {
-          person.name = editPersonName.trim();
-          person.address = editPersonAddress.trim();
+          person.name = editPersonName.trim()
+          person.address = editPersonAddress.trim()
         }
         return person;
       });
-      setPersons(updatedPersons);
-      setEditPersonId(null);
-      setEditPersonName('');
-      setEditPersonAddress('');
+      setStatus(false)
+      setPersons(updatedPersons)
+      setEditPersonId(null)
+      setEditPersonName('')
+      setEditPersonAddress('')
     }
   };
 
@@ -83,6 +93,7 @@ export default function Cadastro(){
                           onChange={handleAddressChange}
                         />
                         <button 
+                          className={styles.button}
                           type='submit'
                         >
                           Adicionar
@@ -94,38 +105,66 @@ export default function Cadastro(){
             <section className={styles.personContainer}>
               <h1>Gerenciar Cadastros</h1>
               <ul>
-
-              {persons.map((person)=>(
-                        <li key={person.id} className={styles.person}>
-                      {editPersonId === person.id ? (
+                {persons.map((person) => (
+                  <li key={person.id} className={styles.person}>
+                    {editPersonId === person.id ? (
                       <div>
-                          <input
-                            type="text"
-                            value={editPersonName}
-                            onChange={(e) => setEditPersonName(e.target.value)}
-                          />
-                          <input
-                            type="text"
-                            value={editPersonAddress}
-                            onChange={(e) => setEditPersonAddress(e.target.value)}
-                          />
+                        <input
+                          type="text"
+                          value={editPersonName}
+                          onChange={(e) => setEditPersonName(e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          value={editPersonAddress}
+                          onChange={(e) => setEditPersonAddress(e.target.value)}
+                        />
                       </div>
-                      ) : (
-                      <div>
-                          <strong>Name:</strong> {person.name}<br />
-                          <strong>Address:</strong> {person.address}
+                    ) : (
+                      <div className={styles.person}>
+                        <article>
+                          <span>Name:</span> {person.name}
+                        </article>
+                        <article>
+                          <span>Address:</span>
+                          {person.address}
+                        </article>
                       </div>
-                      )}
-                      <button onClick={() => editPerson(person.id, person.name, person.address)}>Edit</button>
-                      <button onClick={() => deletePerson(person.id)}>Delete</button>
+                    )}
+                    <button
+                      hidden={status}
+                      className={styles.button}
+                      onClick={() => editPerson(person.id, person.name, person.address)}
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      hidden={status}
+                      className={styles.button}
+                      onClick={() => deletePerson(person.id)}
+                    >
+                      Deletetar
+                    </button>
+                    <br/>
+                    _________________________________
                   </li>
-                  ))}
+                ))}
               </ul>
             
               {editPersonId && (
                   <div>
-                  <button onClick={updatePerson}>Update Person</button>
-                  <button onClick={() => setEditPersonId(null)}>Cancel</button>
+                  <button
+                    className={styles.button} 
+                    onClick={updatePerson}
+                  >
+                    Atualizar
+                  </button>
+                  <button 
+                    className={styles.button}
+                    onClick={cancelEdit}
+                  >
+                    Cancelar
+                  </button>
                   </div>
               )}
             </section>
