@@ -68,57 +68,67 @@ export default function Cadastro(){
         <main className={styles.main}>
             <section className={styles.content}>
                 <div className={styles.contentForm}>
-                    <h1 className={styles.title}>Cadastros</h1>
-                    <form >
+                    <h1 className={styles.title}>Cadastrar</h1>
+                    <form onSubmit={addPerson}>
                         <input
-                        type="text"
-                        placeholder="Insira nome..."
-                        value={inputName}
-                        onChange={handleNameChange}
+                          type="text"
+                          placeholder="Insira nome..."
+                          value={inputName}
+                          onChange={handleNameChange}
                         />
                         <input
-                        type="text"
-                        placeholder="Insira endereço"
-                        value={inputAddress}
-                        onChange={handleAddressChange}
+                          type="text"
+                          placeholder="Insira endereço..."
+                          value={inputAddress}
+                          onChange={handleAddressChange}
                         />
-                        <button onClick={addPerson}>Adicionar</button>
+                        <button 
+                          type='submit'
+                        >
+                          Adicionar
+                        </button>
                     </form>
                 </div>
             </section>
-            <ul>
-                {persons.map(person => (
-                <li key={person.id}>
-                    {editPersonId === person.id ? (
-                    <div>
-                        <input
-                        type="text"
-                        value={editPersonName}
-                        onChange={(e) => setEditPersonName(e.target.value)}
-                        />
-                        <input
-                        type="text"
-                        value={editPersonAddress}
-                        onChange={(e) => setEditPersonAddress(e.target.value)}
-                        />
-                    </div>
-                    ) : (
-                    <div>
-                        <strong>Name:</strong> {person.name}<br />
-                        <strong>Address:</strong> {person.address}
-                    </div>
-                    )}
-                    <button onClick={() => editPerson(person.id, person.name, person.address)}>Edit</button>
-                    <button onClick={() => deletePerson(person.id)}>Delete</button>
-                </li>
-                ))}
-            </ul>
-            {editPersonId && (
-                <div>
-                <button onClick={updatePerson}>Update Person</button>
-                <button onClick={() => setEditPersonId(null)}>Cancel</button>
-                </div>
-            )}
+
+            <section className={styles.personContainer}>
+              <h1>Gerenciar Cadastros</h1>
+              <ul>
+
+              {persons.map((person)=>(
+                        <li key={person.id} className={styles.person}>
+                      {editPersonId === person.id ? (
+                      <div>
+                          <input
+                            type="text"
+                            value={editPersonName}
+                            onChange={(e) => setEditPersonName(e.target.value)}
+                          />
+                          <input
+                            type="text"
+                            value={editPersonAddress}
+                            onChange={(e) => setEditPersonAddress(e.target.value)}
+                          />
+                      </div>
+                      ) : (
+                      <div>
+                          <strong>Name:</strong> {person.name}<br />
+                          <strong>Address:</strong> {person.address}
+                      </div>
+                      )}
+                      <button onClick={() => editPerson(person.id, person.name, person.address)}>Edit</button>
+                      <button onClick={() => deletePerson(person.id)}>Delete</button>
+                  </li>
+                  ))}
+              </ul>
+            
+              {editPersonId && (
+                  <div>
+                  <button onClick={updatePerson}>Update Person</button>
+                  <button onClick={() => setEditPersonId(null)}>Cancel</button>
+                  </div>
+              )}
+            </section>
         </main>
     </div>
   );
