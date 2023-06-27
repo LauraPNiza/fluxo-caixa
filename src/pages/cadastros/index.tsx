@@ -168,10 +168,10 @@ export default function Cadastro() {
                     ) : (
                       <div className={styles.person}>
                         <article>
-                          <span>Name:</span> {person.name}
+                          <span>Nome: </span> {person.name}
                         </article>
                         <article>
-                          <span>Address:</span>
+                          <span>Endereço: </span>
                           {person.address}
                         </article>
                       </div>
