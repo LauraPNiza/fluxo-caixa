@@ -38,6 +38,12 @@ export function Header(){
                         Contas à Pagar
                     </Link>
                     )}
+
+                    {session?.user && (
+                        <Link href="/estoque" className={styles.link}>
+                        Estoque
+                    </Link>
+                    )}
                 </nav>
 
                 {status === "loading" ? (
