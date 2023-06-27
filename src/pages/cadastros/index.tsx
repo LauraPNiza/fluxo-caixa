@@ -1,31 +1,51 @@
-import React, { useState, FormEvent, ChangeEvent } from 'react';
-import {addDoc, collection} from 'firebase/firestore'
+import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 import styles from './styles.module.css';
-import {db} from '../../services/firebaseConnection'
+import { db } from '../../services/firebaseConnection';
 import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
 
 type Person = {
-  id: number
-  name: string
-  address: string
+  id: string;
+  name: string;
+  address: string;
 };
 
 export default function Cadastro() {
-  const [persons, setPersons] = useState<Person[]>([])
-  const [inputName, setInputName] = useState('')
-  const [inputAddress, setInputAddress] = useState('')
-  const [editPersonId, setEditPersonId] = useState<number | null>(null)
-  const [editPersonName, setEditPersonName] = useState('')
-  const [editPersonAddress, setEditPersonAddress] = useState('')
-  const [status, setStatus] = useState(false)
+  const [persons, setPersons] = useState<Person[]>([]);
+  const [inputName, setInputName] = useState('');
+  const [inputAddress, setInputAddress] = useState('');
+  const [editPersonId, setEditPersonId] = useState<string | null>(null);
+  const [editPersonName, setEditPersonName] = useState('');
+  const [editPersonAddress, setEditPersonAddress] = useState('');
+  const [status, setStatus] = useState(false);
 
-  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) =>{
-    setInputName(event.target.value)
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'persons'), (snapshot) => {
+      const fetchedPersons: Person[] = [];
+      snapshot.forEach((doc) => {
+        const personData = doc.data();
+        const person: Person = {
+          id: doc.id,
+          name: personData.name,
+          address: personData.address,
+        };
+        fetchedPersons.push(person);
+      });
+      setPersons(fetchedPersons);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setInputName(event.target.value);
   };
 
   const handleAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputAddress(event.target.value)
+    setInputAddress(event.target.value);
   };
 
   const addPerson = async (event: FormEvent) => {
@@ -33,54 +53,68 @@ export default function Cadastro() {
 
     if (inputName.trim() !== '' && inputAddress.trim() !== '') {
       const newPerson: Person = {
-        id: new Date().getTime(),
+        id: '',
         name: inputName.trim(),
-        address: inputAddress.trim()
+        address: inputAddress.trim(),
       };
 
       try {
-        const docRef = await addDoc(collection(db, 'persons'), newPerson)
-        newPerson.id = docRef.id
-        setPersons([...persons, newPerson])
-        setInputName('')
-        setInputAddress('')
+        const docRef = await addDoc(collection(db, 'persons'), newPerson);
+        newPerson.id = docRef.id;
+        setPersons([...persons, newPerson]);
+        setInputName('');
+        setInputAddress('');
       } catch (error) {
-        console.error(error)
+        console.error('Error adding person to Firestore: ', error);
       }
     }
-  }
-
-  const deletePerson = (personId: number) => {
-    const updatedPersons = persons.filter(person => person.id !== personId)
-    setPersons(updatedPersons)
   };
 
-  const editPerson = (personId: number, personName: string, personAddress: string) => {
-    setStatus(true)
-    setEditPersonId(personId)
-    setEditPersonName(personName)
-    setEditPersonAddress(personAddress)
+  const deletePerson = async (personId: string) => {
+    try {
+      await deleteDoc(doc(db, 'persons', personId));
+      const updatedPersons = persons.filter((person) => person.id !== personId);
+      setPersons(updatedPersons);
+    } catch (error) {
+      console.error('Error deleting person from Firestore: ', error);
+    }
   };
 
-  const cancelEdit =()=>{
-    setStatus(false)
-    setEditPersonId(null)
-  }
+  const editPerson = (personId: string, personName: string, personAddress: string) => {
+    setStatus(true);
+    setEditPersonId(personId);
+    setEditPersonName(personName);
+    setEditPersonAddress(personAddress);
+  };
 
-  const updatePerson = () => {
+  const cancelEdit = () => {
+    setStatus(false);
+    setEditPersonId(null);
+  };
+
+  const updatePerson = async () => {
     if (editPersonId && editPersonName.trim() !== '' && editPersonAddress.trim() !== '') {
-      const updatedPersons = persons.map(person => {
-        if (person.id === editPersonId) {
-          person.name = editPersonName.trim()
-          person.address = editPersonAddress.trim()
-        }
-        return person;
-      });
-      setStatus(false)
-      setPersons(updatedPersons)
-      setEditPersonId(null)
-      setEditPersonName('')
-      setEditPersonAddress('')
+      try {
+        const personRef = doc(db, 'persons', editPersonId);
+        await updateDoc(personRef, {
+          name: editPersonName.trim(),
+          address: editPersonAddress.trim(),
+        });
+        const updatedPersons = persons.map((person) => {
+          if (person.id === editPersonId) {
+            person.name = editPersonName.trim();
+            person.address = editPersonAddress.trim();
+          }
+          return person;
+        });
+        setStatus(false);
+        setPersons(updatedPersons);
+        setEditPersonId(null);
+        setEditPersonName('');
+        setEditPersonAddress('');
+      } catch (error) {
+        console.error('Error updating person in Firestore: ', error);
+      }
     }
   };
 
