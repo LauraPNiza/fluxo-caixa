@@ -1,63 +1,63 @@
-import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
-import { collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc } from 'firebase/firestore';
-import styles from './styles.module.css';
-import { db } from '../../services/firebaseConnection';
-import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
+import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react'
+import { collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, getDocs } from 'firebase/firestore'
+import styles from './styles.module.css'
+import { db } from '../../services/firebaseConnection'
+import { GetServerSideProps } from 'next'
+import { getSession } from 'next-auth/react'
 
 type Payment = {
-  id: string;
-  amount: number;
-  date: number;
-  description: string;
-};
+  id: string
+  amount: number
+  date: number
+  description: string
+}
 
 export default function PaymentManagement() {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [inputAmount, setInputAmount] = useState('');
-  const [inputDate, setInputDate] = useState('');
-  const [inputDescription, setInputDescription] = useState('');
-  const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
-  const [editPaymentAmount, setEditPaymentAmount] = useState('');
-  const [editPaymentDate, setEditPaymentDate] = useState('');
-  const [editPaymentDescription, setEditPaymentDescription] = useState('');
-  const [status, setStatus] = useState(false);
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [inputAmount, setInputAmount] = useState('')
+  const [inputDate, setInputDate] = useState('')
+  const [inputDescription, setInputDescription] = useState('')
+  const [editPaymentId, setEditPaymentId] = useState<string | null>(null)
+  const [editPaymentAmount, setEditPaymentAmount] = useState('')
+  const [editPaymentDate, setEditPaymentDate] = useState('')
+  const [editPaymentDescription, setEditPaymentDescription] = useState('')
+  const [status, setStatus] = useState(false)
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'payments'), (snapshot) => {
-      const fetchedPayments: Payment[] = [];
+      const fetchedPayments: Payment[] = []
       snapshot.forEach((doc) => {
-        const paymentData = doc.data();
+        const paymentData = doc.data()
         const payment: Payment = {
           id: doc.id,
           amount: paymentData.amount,
           date: paymentData.date,
           description: paymentData.description,
-        };
-        fetchedPayments.push(payment);
-      });
-      setPayments(fetchedPayments);
-    });
+        }
+        fetchedPayments.push(payment)
+      })
+      setPayments(fetchedPayments)
+    })
 
     return () => {
       unsubscribe();
-    };
-  }, []);
+    }
+  }, [])
 
   const handleAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputAmount(event.target.value);
-  };
+    setInputAmount(event.target.value)
+  }
 
   const handleDateChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputDate(event.target.value);
-  };
+    setInputDate(event.target.value)
+  }
 
   const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputDescription(event.target.value);
-  };
+    setInputDescription(event.target.value)
+  }
 
   const addPayment = async (event: FormEvent) => {
-    event.preventDefault();
+    event.preventDefault()
 
     if (inputAmount.trim() !== '' && inputDate.trim() !== '') {
       const newPayment: Payment = {
@@ -65,43 +65,43 @@ export default function PaymentManagement() {
         amount: parseFloat(inputAmount.trim()),
         date: inputDate.trim(),
         description: inputDescription.trim(),
-      };
+      }
 
       try {
-        const docRef = await addDoc(collection(db, 'payments'), newPayment);
-        newPayment.id = docRef.id;
-        setPayments([...payments, newPayment]);
-        setInputAmount('');
-        setInputDate('');
-        setInputDescription('');
+        const docRef = await addDoc(collection(db, 'payments'), newPayment)
+        newPayment.id = docRef.id
+        setPayments([...payments, newPayment])
+        setInputAmount('')
+        setInputDate('')
+        setInputDescription('')
       } catch (error) {
-        console.error('Error adding payment to Firestore: ', error);
+        console.error(error)
       }
     }
-  };
+  }
 
   const deletePayment = async (paymentId: string) => {
     try {
-      await deleteDoc(doc(db, 'payments', paymentId));
-      const updatedPayments = payments.filter((payment) => payment.id !== paymentId);
-      setPayments(updatedPayments);
+      await deleteDoc(doc(db, 'payments', paymentId))
+      const updatedPayments = payments.filter((payment) => payment.id !== paymentId)
+      setPayments(updatedPayments)
     } catch (error) {
-      console.error('Error deleting payment from Firestore: ', error);
+      console.error('Error deleting payment from Firestore: ', error)
     }
-  };
+  }
 
   const editPayment = (paymentId: string, paymentAmount: number, paymentDate: string, paymentDescription: string) => {
-    setStatus(true);
-    setEditPaymentId(paymentId);
-    setEditPaymentAmount(paymentAmount.toString());
-    setEditPaymentDate(paymentDate);
-    setEditPaymentDescription(paymentDescription);
-  };
+    setStatus(true)
+    setEditPaymentId(paymentId)
+    setEditPaymentAmount(paymentAmount.toString())
+    setEditPaymentDate(paymentDate)
+    setEditPaymentDescription(paymentDescription)
+  }
 
   const cancelEdit = () => {
-    setStatus(false);
-    setEditPaymentId(null);
-  };
+    setStatus(false)
+    setEditPaymentId(null)
+  }
 
   const updatePayment = async () => {
     if (editPaymentId && editPaymentAmount.trim() !== '' && editPaymentDate.trim() !== '' && editPaymentDescription.trim() !== '') {
@@ -111,26 +111,40 @@ export default function PaymentManagement() {
           amount: parseFloat(editPaymentAmount.trim()),
           date: editPaymentDate.trim(),
           description: editPaymentDescription.trim(),
-        });
+        })
         const updatedPayments = payments.map((payment) => {
           if (payment.id === editPaymentId) {
-            payment.amount = parseFloat(editPaymentAmount.trim());
-            payment.date = editPaymentDate.trim();
-            payment.description = editPaymentDescription.trim();
+            payment.amount = parseFloat(editPaymentAmount.trim())
+            payment.date = editPaymentDate.trim()
+            payment.description = editPaymentDescription.trim()
           }
-          return payment;
-        });
-        setStatus(false);
-        setPayments(updatedPayments);
-        setEditPaymentId(null);
-        setEditPaymentAmount('');
-        setEditPaymentDate('');
-        setEditPaymentDescription('');
+          return payment
+        })
+        setStatus(false)
+        setPayments(updatedPayments)
+        setEditPaymentId(null)
+        setEditPaymentAmount('')
+        setEditPaymentDate('')
+        setEditPaymentDescription('')
       } catch (error) {
-        console.error('Error updating payment in Firestore: ', error);
+        console.error(error)
       }
     }
-  };
+  }
+
+  const fetchData = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'persons'))
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      console.log(data)
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   return (
     <div className={styles.container}>

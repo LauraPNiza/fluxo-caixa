@@ -15,13 +15,6 @@
   justify-content: center;
 }
 
-.hero{
-  max-width: 480px;
-  object-fit: contain;
-  width: auto;
-  height: auto;
-}
-
 .title{
   color: #FFF;
   text-align: center;
@@ -65,4 +58,3 @@
     text-align: center;
   }
 }
-
