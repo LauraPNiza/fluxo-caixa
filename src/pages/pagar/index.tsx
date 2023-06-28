@@ -8,19 +8,19 @@ import { getSession } from 'next-auth/react';
 type Payment = {
   id: string;
   amount: number;
-  date: string;
-  person: any; 
+  date: number;
+  description: string;
 };
-
-import persons from '../cadastros';
 
 export default function PaymentManagement() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [inputAmount, setInputAmount] = useState('');
   const [inputDate, setInputDate] = useState('');
+  const [inputDescription, setInputDescription] = useState('');
   const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
   const [editPaymentAmount, setEditPaymentAmount] = useState('');
   const [editPaymentDate, setEditPaymentDate] = useState('');
+  const [editPaymentDescription, setEditPaymentDescription] = useState('');
   const [status, setStatus] = useState(false);
 
   useEffect(() => {
@@ -32,6 +32,7 @@ export default function PaymentManagement() {
           id: doc.id,
           amount: paymentData.amount,
           date: paymentData.date,
+          description: paymentData.description,
         };
         fetchedPayments.push(payment);
       });
@@ -51,6 +52,10 @@ export default function PaymentManagement() {
     setInputDate(event.target.value);
   };
 
+  const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setInputDescription(event.target.value);
+  };
+
   const addPayment = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -59,6 +64,7 @@ export default function PaymentManagement() {
         id: '',
         amount: parseFloat(inputAmount.trim()),
         date: inputDate.trim(),
+        description: inputDescription.trim(),
       };
 
       try {
@@ -67,6 +73,7 @@ export default function PaymentManagement() {
         setPayments([...payments, newPayment]);
         setInputAmount('');
         setInputDate('');
+        setInputDescription('');
       } catch (error) {
         console.error('Error adding payment to Firestore: ', error);
       }
@@ -83,11 +90,12 @@ export default function PaymentManagement() {
     }
   };
 
-  const editPayment = (paymentId: string, paymentAmount: number, paymentDate: string) => {
+  const editPayment = (paymentId: string, paymentAmount: number, paymentDate: string, paymentDescription: string) => {
     setStatus(true);
     setEditPaymentId(paymentId);
     setEditPaymentAmount(paymentAmount.toString());
     setEditPaymentDate(paymentDate);
+    setEditPaymentDescription(paymentDescription);
   };
 
   const cancelEdit = () => {
@@ -96,17 +104,19 @@ export default function PaymentManagement() {
   };
 
   const updatePayment = async () => {
-    if (editPaymentId && editPaymentAmount.trim() !== '' && editPaymentDate.trim() !== '') {
+    if (editPaymentId && editPaymentAmount.trim() !== '' && editPaymentDate.trim() !== '' && editPaymentDescription.trim() !== '') {
       try {
         const paymentRef = doc(db, 'payments', editPaymentId);
         await updateDoc(paymentRef, {
           amount: parseFloat(editPaymentAmount.trim()),
           date: editPaymentDate.trim(),
+          description: editPaymentDescription.trim(),
         });
         const updatedPayments = payments.map((payment) => {
           if (payment.id === editPaymentId) {
             payment.amount = parseFloat(editPaymentAmount.trim());
             payment.date = editPaymentDate.trim();
+            payment.description = editPaymentDescription.trim();
           }
           return payment;
         });
@@ -115,6 +125,7 @@ export default function PaymentManagement() {
         setEditPaymentId(null);
         setEditPaymentAmount('');
         setEditPaymentDate('');
+        setEditPaymentDescription('');
       } catch (error) {
         console.error('Error updating payment in Firestore: ', error);
       }
@@ -126,29 +137,35 @@ export default function PaymentManagement() {
       <main className={styles.main}>
         <section className={styles.content}>
           <div className={styles.contentForm}>
-            <h1 className={styles.title}>Add Payment</h1>
+            <h1 className={styles.title}>Adicionar Pagamento</h1>
             <form onSubmit={addPayment}>
               <input
                 type="text"
-                placeholder="Enter amount..."
+                placeholder="Valor..."
                 value={inputAmount}
                 onChange={handleAmountChange}
               />
               <input
                 type="text"
-                placeholder="Enter date..."
+                placeholder="dd/mm/aaaa"
                 value={inputDate}
                 onChange={handleDateChange}
               />
+              <input
+                type="text"
+                placeholder="Descrição..."
+                value={inputDescription}
+                onChange={handleDescriptionChange}
+              />
               <button className={styles.button} type="submit">
-                Add
+                Adicionar
               </button>
             </form>
           </div>
         </section>
 
         <section className={styles.paymentContainer}>
-          <h1>Manage Payments</h1>
+          <h1>Pagamentos</h1>
           <ul>
             {payments.map((payment) => (
               <li key={payment.id} className={styles.payment}>
@@ -164,31 +181,40 @@ export default function PaymentManagement() {
                       value={editPaymentDate}
                       onChange={(e) => setEditPaymentDate(e.target.value)}
                     />
+                    <input
+                      type="text"
+                      value={editPaymentDescription}
+                      onChange={(e) => setEditPaymentDescription(e.target.value)}
+                    />
                   </div>
                 ) : (
                   <div className={styles.payment}>
                     <article>
-                      <span>Amount: </span> {payment.amount}
+                      <span>Valor: </span> {payment.amount}
                     </article>
                     <article>
-                      <span>Date: </span>
+                      <span>Data: </span>
                       {payment.date}
+                    </article>
+                    <article>
+                      <span>Descrição: </span>
+                      {payment.description}
                     </article>
                   </div>
                 )}
                 <button
                   hidden={status}
                   className={styles.button}
-                  onClick={() => editPayment(payment.id, payment.amount, payment.date)}
+                  onClick={() => editPayment(payment.id, payment.amount, payment.date, payment.description)}
                 >
-                  Edit
+                  Editar
                 </button>
                 <button
                   hidden={status}
                   className={styles.button}
                   onClick={() => deletePayment(payment.id)}
                 >
-                  Delete
+                  Deletar
                 </button>
                 <br />
                 _________________________________
@@ -199,10 +225,10 @@ export default function PaymentManagement() {
           {editPaymentId && (
             <div>
               <button className={styles.button} onClick={updatePayment}>
-                Update
+                Atualizar
               </button>
               <button className={styles.button} onClick={cancelEdit}>
-                Cancel
+                Cancelar
               </button>
             </div>
           )}
