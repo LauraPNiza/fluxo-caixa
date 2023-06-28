@@ -5,18 +5,26 @@ import { db } from '../../services/firebaseConnection'
 import { GetServerSideProps } from 'next'
 import { getSession } from 'next-auth/react'
 
+type Person = {
+  id: string
+  name: string
+}
+
 type Payment = {
   id: string
   amount: number
   date: number
   description: string
+  personId: string
 }
 
 export default function PaymentManagement() {
   const [payments, setPayments] = useState<Payment[]>([])
+  const [persons, setPersons] = useState<Person[]>([])
   const [inputAmount, setInputAmount] = useState('')
   const [inputDate, setInputDate] = useState('')
   const [inputDescription, setInputDescription] = useState('')
+  const [selectedPerson, setSelectedPerson] = useState('')
   const [editPaymentId, setEditPaymentId] = useState<string | null>(null)
   const [editPaymentAmount, setEditPaymentAmount] = useState('')
   const [editPaymentDate, setEditPaymentDate] = useState('')
@@ -33,6 +41,7 @@ export default function PaymentManagement() {
           amount: paymentData.amount,
           date: paymentData.date,
           description: paymentData.description,
+          personId: paymentData.personId,
         }
         fetchedPayments.push(payment)
       })
@@ -40,8 +49,12 @@ export default function PaymentManagement() {
     })
 
     return () => {
-      unsubscribe();
+      unsubscribe()
     }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
   }, [])
 
   const handleAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -56,15 +69,24 @@ export default function PaymentManagement() {
     setInputDescription(event.target.value)
   }
 
+  const handlePersonChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPerson(event.target.value)
+  }
+
   const addPayment = async (event: FormEvent) => {
     event.preventDefault()
 
-    if (inputAmount.trim() !== '' && inputDate.trim() !== '') {
+    if (
+      inputAmount.trim() !== '' &&
+      inputDate.trim() !== '' &&
+      selectedPerson.trim() !== ''
+    ) {
       const newPayment: Payment = {
         id: '',
         amount: parseFloat(inputAmount.trim()),
         date: inputDate.trim(),
         description: inputDescription.trim(),
+        personId: selectedPerson.trim(),
       }
 
       try {
@@ -74,6 +96,7 @@ export default function PaymentManagement() {
         setInputAmount('')
         setInputDate('')
         setInputDescription('')
+        setSelectedPerson('')
       } catch (error) {
         console.error(error)
       }
@@ -83,40 +106,56 @@ export default function PaymentManagement() {
   const deletePayment = async (paymentId: string) => {
     try {
       await deleteDoc(doc(db, 'payments', paymentId))
-      const updatedPayments = payments.filter((payment) => payment.id !== paymentId)
+      const updatedPayments = payments.filter(
+        (payment) => payment.id !== paymentId
+      )
       setPayments(updatedPayments)
     } catch (error) {
-      console.error('Error deleting payment from Firestore: ', error)
+      console.error(error)
     }
   }
 
-  const editPayment = (paymentId: string, paymentAmount: number, paymentDate: string, paymentDescription: string) => {
+  const editPayment = (
+    paymentId: string,
+    paymentAmount: number,
+    paymentDate: string,
+    paymentDescription: string,
+    paymentPersonId: string
+  ) => {
     setStatus(true)
     setEditPaymentId(paymentId)
     setEditPaymentAmount(paymentAmount.toString())
     setEditPaymentDate(paymentDate)
     setEditPaymentDescription(paymentDescription)
+    setSelectedPerson(paymentPersonId)
   }
 
   const cancelEdit = () => {
     setStatus(false)
     setEditPaymentId(null)
-  }
+  };
 
   const updatePayment = async () => {
-    if (editPaymentId && editPaymentAmount.trim() !== '' && editPaymentDate.trim() !== '' && editPaymentDescription.trim() !== '') {
+    if (
+      editPaymentId &&
+      editPaymentAmount.trim() !== '' &&
+      editPaymentDate.trim() !== '' &&
+      editPaymentDescription.trim() !== ''
+    ) {
       try {
-        const paymentRef = doc(db, 'payments', editPaymentId);
+        const paymentRef = doc(db, 'payments', editPaymentId)
         await updateDoc(paymentRef, {
           amount: parseFloat(editPaymentAmount.trim()),
           date: editPaymentDate.trim(),
           description: editPaymentDescription.trim(),
+          personId: selectedPerson.trim(),
         })
         const updatedPayments = payments.map((payment) => {
           if (payment.id === editPaymentId) {
             payment.amount = parseFloat(editPaymentAmount.trim())
             payment.date = editPaymentDate.trim()
             payment.description = editPaymentDescription.trim()
+            payment.personId = selectedPerson.trim()
           }
           return payment
         })
@@ -126,6 +165,7 @@ export default function PaymentManagement() {
         setEditPaymentAmount('')
         setEditPaymentDate('')
         setEditPaymentDescription('')
+        setSelectedPerson('')
       } catch (error) {
         console.error(error)
       }
@@ -135,12 +175,11 @@ export default function PaymentManagement() {
   const fetchData = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'persons'))
-      const data = querySnapshot.docs.map((doc) => ({
+      const data: Person[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        name: doc.data().name,
       }))
-      console.log(data)
-
+      setPersons(data)
     } catch (error) {
       console.error(error)
     }
@@ -171,6 +210,14 @@ export default function PaymentManagement() {
                 value={inputDescription}
                 onChange={handleDescriptionChange}
               />
+              <select value={selectedPerson} onChange={handlePersonChange}>
+                <option value="">Selecione uma pessoa</option>
+                {persons.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.name}
+                  </option>
+                ))}
+              </select>
               <button className={styles.button} type="submit">
                 Adicionar
               </button>
@@ -200,6 +247,17 @@ export default function PaymentManagement() {
                       value={editPaymentDescription}
                       onChange={(e) => setEditPaymentDescription(e.target.value)}
                     />
+                    <select
+                      value={selectedPerson}
+                      onChange={handlePersonChange}
+                    >
+                      <option value="">Selecione uma pessoa</option>
+                      {persons.map((person) => (
+                        <option key={person.id} value={person.id}>
+                          {person.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 ) : (
                   <div className={styles.payment}>
@@ -219,7 +277,15 @@ export default function PaymentManagement() {
                 <button
                   hidden={status}
                   className={styles.button}
-                  onClick={() => editPayment(payment.id, payment.amount, payment.date, payment.description)}
+                  onClick={() =>
+                    editPayment(
+                      payment.id,
+                      payment.amount,
+                      payment.date,
+                      payment.description,
+                      payment.personId
+                    )
+                  }
                 >
                   Editar
                 </button>
@@ -253,15 +319,14 @@ export default function PaymentManagement() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const session = await getSession({ req });
-
+  const session = await getSession({ req })
   if (!session?.user) {
     return {
       redirect: {
         destination: '/',
         permanent: false,
       },
-    };
+    }
   }
 
   return {
@@ -270,5 +335,5 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         email: session?.user?.email,
       },
     },
-  };
+  }
 }
