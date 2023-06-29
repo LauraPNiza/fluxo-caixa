@@ -21,6 +21,7 @@ type Payment = {
 export default function PaymentManagement() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [persons, setPersons] = useState<Person[]>([])
+  const [totalAmount, setTotalAmount] = useState<number>(0)
   const [inputAmount, setInputAmount] = useState('')
   const [inputDate, setInputDate] = useState('')
   const [inputDescription, setInputDescription] = useState('')
@@ -56,6 +57,15 @@ export default function PaymentManagement() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    const calculateTotalAmount = () => {
+      const sum = payments.reduce((total, payment) => total + payment.amount, 0)
+      setTotalAmount(sum)
+    }
+  
+    calculateTotalAmount()
+  }, [payments])
 
   const handleAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
     setInputAmount(event.target.value)
@@ -306,7 +316,12 @@ export default function PaymentManagement() {
               </li>
             ))}
           </ul>
-
+          <section>
+            <article>
+              <h2>Soma contas pagas:</h2>
+              <span>{totalAmount}</span>
+            </article>
+          </section>
           {editPaymentId && (
             <div>
               <button className={styles.button} onClick={updatePayment}>
@@ -320,7 +335,7 @@ export default function PaymentManagement() {
         </section>
       </main>
     </div>
-  );
+  )
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {

@@ -21,6 +21,7 @@ type Bill = {
 export default function BillManagement() {
   const [bills, setBills] = useState<Bill[]>([])
   const [persons, setPersons] = useState<Person[]>([])
+  const [totalAmount, setTotalAmount] = useState<number>(0)
   const [inputBillAmount, setInputBillAmount] = useState('')
   const [inputBillDate, setInputBillDate] = useState('')
   const [inputBillDescription, setInputBillDescription] = useState('')
@@ -54,6 +55,15 @@ export default function BillManagement() {
       unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    const calculateTotalAmount = () => {
+      const sum = bills.reduce((total, bills) => total + bills.amount, 0)
+      setTotalAmount(sum)
+    }
+  
+    calculateTotalAmount()
+  }, [bills])
 
   const handleBillAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
     setInputBillAmount(event.target.value)
@@ -288,7 +298,12 @@ export default function BillManagement() {
               </li>
             ))}
           </ul>
-
+          <section>
+            <article>
+              <h2>Soma contas recebidas:</h2>
+              <span>{totalAmount}</span>
+            </article>
+          </section>
           {editBillId && (
             <div>
               <button className={styles.button} onClick={updateBill}>
