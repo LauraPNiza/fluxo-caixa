@@ -1,17 +1,16 @@
 import Head from 'next/head'
 import { redirect } from 'next/dist/server/api-utils'
 import {getSession} from 'next-auth/react'
-import { ChangeEvent, FormEvent, useState, useEffect } from 'react'
-import Link from 'next/link'
-import { collection, onSnapshot } from 'firebase/firestore'
-import { db } from '../../services/firebaseConnection'
-
+import React from 'react'
+import { GetServerSideProps } from 'next'
 import styles from './styles.module.css'
 import {PagarSoma} from '../../components/pagarsoma'
 import {ReceberSoma} from '../../components/recebersoma'
 import {Saldo} from '../../components/saldo'
 
 export default function Dashboard (){
+
+   
 
     return(
         <div className={styles.container}>
@@ -30,3 +29,24 @@ export default function Dashboard (){
         </div>
     )
 }
+
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+    const session = await getSession({ req })
+  
+    if (!session?.user) {
+      return {
+        redirect: {
+          destination: '/',
+          permanent: false,
+        },
+      }
+    }
+  
+    return {
+      props: {
+        user: {
+          email: session?.user?.email,
+        },
+      },
+    }
+  }
