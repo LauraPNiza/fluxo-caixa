@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import styles from './styles.module.css'
 import Image from 'next/image'
 
-export default function Home() {
+export default function Contato() {
   return (
     <div className={styles.container}>
       <Head>
