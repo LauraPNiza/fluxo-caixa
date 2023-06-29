@@ -13,7 +13,7 @@ type Person = {
 type Payment = {
   id: string
   amount: number
-  date: number
+  date: string
   description: string
   personId: string
 }
@@ -79,6 +79,7 @@ export default function PaymentManagement() {
     if (
       inputAmount.trim() !== '' &&
       inputDate.trim() !== '' &&
+      inputDescription.trim() !== '' &&
       selectedPerson.trim() !== ''
     ) {
       const newPayment: Payment = {
@@ -271,6 +272,10 @@ export default function PaymentManagement() {
                     <article>
                       <span>Descrição: </span>
                       {payment.description}
+                    </article>
+                    <article>
+                      <span>Favorecido: </span>
+                      {persons.find((person) => person.id === payment.personId)?.name}
                     </article>
                   </div>
                 )}
