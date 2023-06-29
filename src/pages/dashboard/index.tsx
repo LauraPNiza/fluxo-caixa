@@ -3,10 +3,16 @@ import { redirect } from 'next/dist/server/api-utils'
 import {getSession} from 'next-auth/react'
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react'
 import Link from 'next/link'
+import { collection, onSnapshot } from 'firebase/firestore'
+import { db } from '../../services/firebaseConnection'
 
 import styles from './styles.module.css'
+import {PagarSoma} from '../../components/pagarsoma'
+import {ReceberSoma} from '../../components/recebersoma'
+import {Saldo} from '../../components/saldo'
 
 export default function Dashboard (){
+
     return(
         <div className={styles.container}>
             <Head>
@@ -16,15 +22,9 @@ export default function Dashboard (){
             <main className={styles.main}>
                 <section className={styles.resumo}>
                     <h1>Dashboard</h1>
-                    <article>
-                        <p>contas a pagar dia - valor</p>
-                    </article>
-                    <article>
-                        <p>contas a receber dia - valor</p>
-                    </article>
-                    <article>
-                        <p>contas em atraso - valor</p>
-                    </article>
+                    <ReceberSoma/>
+                    <PagarSoma/>
+                    <Saldo/>
                 </section>
             </main>
         </div>

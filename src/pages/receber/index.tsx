@@ -4,6 +4,7 @@ import styles from './styles.module.css';
 import { db } from '../../services/firebaseConnection';
 import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
+import {ReceberSoma} from '../../components/recebersoma'
 
 type Person = {
   id: string
@@ -299,10 +300,7 @@ export default function BillManagement() {
             ))}
           </ul>
           <section>
-            <article>
-              <h2>Soma contas recebidas:</h2>
-              <span>{totalAmount}</span>
-            </article>
+            <ReceberSoma/>
           </section>
           {editBillId && (
             <div>
