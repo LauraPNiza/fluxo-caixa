@@ -253,7 +253,14 @@ export default function BillManagement() {
                     <select
                       value={selectedPerson}
                       onChange={handlePersonChange}
-                    ></select>
+                    >
+                      <option value="">Selecione uma pessoa</option>
+                      {persons.map((person) => (
+                        <option key={person.id} value={person.id}>
+                          {person.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 ) : (
                   <div className={styles.payment}>
